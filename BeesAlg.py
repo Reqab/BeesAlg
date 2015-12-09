@@ -1,6 +1,10 @@
 import random
 import math
 
+iter = 100
+shrink = 0.99
+stlim = 10
+
 '''
     Bees Algorithm updated in 2009 by Pham et al
 '''
@@ -50,9 +54,8 @@ class BeesAlg09:
 
     def evaluate(self):
         self.patches.sort(key=lambda x: self.function(x.optima), reverse=True)
-        if self.optima == None or self.optima < self.patches[0].optima:
+        if self.optima == None or self.function(self.optima) < self.function(self.patches[0].optima):
             self.optima = self.patches[0].optima
-
 
     def localSearch(self):
         for x in self.patches[:self.eliteSites]:
@@ -151,8 +154,7 @@ def griewangk(x):
 
 def functionsBeesAlg05():
     print 'bees alg 05'
-    iter = 100
-    shrink = 0.99
+
     #function #1 De Jong
     count = 0
     for i in range(iter):
@@ -300,16 +302,123 @@ def functionsBeesAlg05():
 
 def functionsBeesAlg09():
     print 'bees alg 09'
+
     #Function #1 De Jong
     count = 0
-    bees = BeesAlg09(10, 3, 1, 2, 4, 0.1, 10, [-2.048, 2.048], deJong, 2)
-    bees.evaluate()
-    while deJong(bees.optima) < (3905.93-0.001):
-        bees.localSearch()
-        bees.globalSearch()
+    for i in range(iter):
+        bees = BeesAlg09(10, 3, 1, 2, 4, 0.1, stlim, [-2.048, 2.048], deJong, 2)
         bees.evaluate()
-        print deJong(bees.optima)
-    print count
+        while deJong(bees.optima) < (3905.93-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 1 De Jong mean number of evaluations'
+    print count/iter
+
+    #Function #2 Goldstein and Price
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(20, 3, 1, 1, 13, 0.1, stlim, [-2, 2], goldsteinPrice, 2)
+        bees.evaluate()
+        while goldsteinPrice(bees.optima) < (-3-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 2 Goldstein and Price mean number of evaluations'
+    print count/iter
+
+    #Function #3 Branin
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(30, 5, 1, 2, 3, 0.5, stlim, [-5, 10], branin, 2)
+        bees.evaluate()
+        while branin(bees.optima) < (-0.3977272*1.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 3 Branin mean number of evaluations'
+    print count/iter
+
+    #Function #4 Martin Gaddy
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(20, 3, 1, 1, 10, 0.5, stlim, [0, 10], martinGaddy, 2)
+        bees.evaluate()
+        while martinGaddy(bees.optima) < (-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 4 Martin Gaddy mean number of evaluations'
+    print count/iter
+
+    #Function #5a Rosenbrock
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(10, 3, 1, 2, 4, 0.1, stlim, [-1.2, 1.2], rosenbrock, 2)
+        bees.evaluate()
+        while rosenbrock(bees.optima) < (-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 5a Rosenbrock mean number of evaluations'
+    print count/iter
+
+    #Function #5b Rosenbrock
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(6, 3, 1, 1, 4, 0.5, stlim, [-10, 10], rosenbrock, 2)
+        bees.evaluate()
+        while rosenbrock(bees.optima) < (-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 5b Rosenbrock mean number of evaluations'
+    print count/iter
+
+    #Function #7 Hyper Sphere
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(8, 3, 1, 1, 2, 0.3, stlim, [-5.12, 5.12], hyperSphere, 6)
+        bees.evaluate()
+        while hyperSphere(bees.optima) < (-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 7 Hyper Sphere mean number of evaluations'
+    print count/iter
+
+    #Function #6 Rosenbrock
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(20, 6, 1, 5, 8, 0.1, stlim, [-1.2, 1.2], rosenbrock2, 4)
+        bees.evaluate()
+        while rosenbrock2(bees.optima) < (-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 6 Rosenbrock mean number of evaluations'
+    print count/iter
+
+    #Function #8 Griewangk
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg09(10, 3, 2, 4, 7, 5, stlim, [-512, 512], griewangk, 10)
+        bees.evaluate()
+        while griewangk(bees.optima) < (10-0.001):
+            bees.localSearch()
+            bees.globalSearch()
+            bees.evaluate()
+            count += 1
+    print 'Function 8 Griewangk mean number of evaluations'
+    print count/iter
 
 def main():
     #functionsBeesAlg05()
