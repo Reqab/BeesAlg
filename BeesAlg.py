@@ -4,44 +4,70 @@ import math
 '''
     Bees Algorithm updated in 2009 by Pham et al
 '''
-class scoutBee:
-    def __init__(self, maximum, minimum):
-        self.maximum = maximum
-        self.minimum = minimum
-        self.loc = None
-        self.relocate()
-
-    def relocate(self):
-        self.loc = [random.uniform(self.minimum[i], self.maximum[i]) for i in range(len(self.minimum))]
-
-class patch:
-    def __init__(self, scout):
+class Patch:
+    def __init__(self, scout, distance, dimensions):
         self.ngh = 1.0
-        self.optima = None
-        self.scout = scout
+        self.distance = distance
+        self.dimensions = dimensions
+        self.optima = scout
         self.stagnant = 0
 
     def shrink(self):
         self.ngh *= .8
 
-    def abandon(self):
+    def abandon(self, newloc):
         self.ngh = 1.0
-        self.optima = None
-        self.scout.relocate()
+        self.optima = newloc
         self.stagnant = 0
 
-    def search(self, function):
-        print 'search'
+    def search(self, function, count):
+        workers = [[random.uniform(self.ngh*(self.optima[i]-self.distance), self.ngh*(self.optima[i]+self.distance))
+                    for i in range(self.dimensions)] for j in range(count)]
+        evaluation = [[function(x),x] for x in workers]
+        evaluation.sort(reverse=True)
+        if function(self.optima) < evaluation[0][0]:
+            self.optima = evaluation[0][1]
+            self.stagnant = 0
+        else:
+            self.stagnant += 1
+            self.shrink()
+
 
 class BeesAlg09:
-    def __init__(self, population, sites, eliteSites, nsp, nep, stlim):
+    def __init__(self, population, sites, eliteSites, nsp, nep, ngh, stlim, interval, function, dimensions):
         self.population = population
         self.sites = sites
         self.eliteSites = eliteSites
         self.nsp = nsp
         self.nep = nep
+        self.ngh = ngh
         self.stlim = stlim
-        self.patches = None
+        self.interval = interval
+        self.function = function
+        self.dimensions = dimensions
+        self.patches = [Patch([random.uniform(interval[0],interval[1]) for j in range(dimensions)], ngh, dimensions) for i in range(self.population)]
+        self.optima = None
+
+    def evaluate(self):
+        self.patches.sort(key=lambda x: self.function(x.optima), reverse=True)
+        if self.optima == None or self.optima < self.patches[0].optima:
+            self.optima = self.patches[0].optima
+
+
+    def localSearch(self):
+        for x in self.patches[:self.eliteSites]:
+            x.search(self.function, self.nep)
+            if x.stagnant >= self.stlim:
+                x.abandon([random.uniform(self.interval[0],self.interval[1]) for i in range(self.dimensions)])
+        for x in self.patches[self.eliteSites: self.sites]:
+            x.search(self.function, self.nsp)
+            if x.stagnant >= self.stlim:
+                x.abandon([random.uniform(self.interval[0],self.interval[1]) for i in range(self.dimensions)])
+
+    def globalSearch(self):
+        for x in self.patches[self.sites:]:
+            x.abandon([random.uniform(self.interval[0],self.interval[1]) for i in range(self.dimensions)])
+
 
 '''
     Bees Algorithm proposed in 2005 by Pham et al
@@ -239,22 +265,6 @@ def functionsBeesAlg05():
     print 'Function 7 Hyper Sphere mean number of evaluations'
     print count/iter
 
-    #function #8 Griewangk
-    count = 0
-    for i in range(iter):
-        bees = BeesAlg05(10, 3, 2, 4, 7, 5)
-        bees.populateScouts([-512,512], 10)
-        bees.evaluate(griewangk)
-        while griewangk(bees.scouts[0]) < (10-0.001):
-            bees.recruit(10)
-            bees.evalSites(griewangk)
-            bees.populateScouts([-512,512], 10)
-            bees.evaluate(griewangk)
-            bees.radius *= shrink
-            count += 1
-    print 'Function 8 Griewangk mean number of evaluations'
-    print count/iter
-
     #function #6 Rosenbrock
     count = 0
     for i in range(iter):
@@ -271,11 +281,38 @@ def functionsBeesAlg05():
     print 'Function 6 Rosenbrock mean number of evaluations'
     print count/iter
 
+    #function #8 Griewangk
+    count = 0
+    for i in range(iter):
+        bees = BeesAlg05(10, 3, 2, 4, 7, 5)
+        bees.populateScouts([-512,512], 10)
+        bees.evaluate(griewangk)
+        while griewangk(bees.scouts[0]) < (10-0.001):
+            bees.recruit(10)
+            bees.evalSites(griewangk)
+            bees.populateScouts([-512,512], 10)
+            bees.evaluate(griewangk)
+            bees.radius *= shrink
+            count += 1
+    print 'Function 8 Griewangk mean number of evaluations'
+    print count/iter
+
+
 def functionsBeesAlg09():
-    bees = BeesAlg05(10, 3, 1, 2, 4, 0.1)
+    print 'bees alg 09'
+    #Function #1 De Jong
+    count = 0
+    bees = BeesAlg09(10, 3, 1, 2, 4, 0.1, 10, [-2.048, 2.048], deJong, 2)
+    bees.evaluate()
+    while deJong(bees.optima) < (3905.93-0.001):
+        bees.localSearch()
+        bees.globalSearch()
+        bees.evaluate()
+        print deJong(bees.optima)
+    print count
 
 def main():
-    functionsBeesAlg05()
+    #functionsBeesAlg05()
     functionsBeesAlg09()
 
 if __name__ == '__main__':
